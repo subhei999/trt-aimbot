@@ -58,7 +58,7 @@ def draw_box(
             distance = ((center[0] - center_x) ** 2 + (center[1] - center_y) ** 2) ** 0.5
             
             # Check if this is the closest human to center
-            if distance < closest_distance and cls_name.lower() == "person":
+            if distance < closest_distance and cls_name.lower() == "head":
                 closest_distance = distance
                 closest_center = center
 

@@ -26,6 +26,7 @@ VK_PLUS = 0x6B      # Numpad + key to increase sensitivity
 VK_MINUS = 0x6D     # Numpad - key to decrease sensitivity
 VK_V = 0x56         # V key to toggle visualization
 VK_F = 0x46         # F key to toggle FPS display
+VK_C = 0x43         # C key to toggle aimbot active state
 WINDOW_NAME = "Detection Output"  # Define window name as a constant for reuse
 KEY_TOGGLE_TOPMOST = ord('t')     # Press 't' to toggle always-on-top mode
 KEY_QUIT = ord('q')              # Press 'q' to quit
@@ -35,6 +36,7 @@ KEY_INCREASE_SENS = ord('+')     # Press '+' to increase sensitivity
 KEY_DECREASE_SENS = ord('-')     # Press '-' to decrease sensitivity
 KEY_TOGGLE_VISUAL = ord('v')     # Press 'v' to toggle visualization
 KEY_TOGGLE_FPS = ord('f')        # Press 'f' to toggle FPS display
+KEY_TOGGLE_ACTIVE = ord('c')     # Press 'c' to toggle aimbot active state
 
 # -------------------------------
 # Utility Classes & Functions
@@ -206,7 +208,7 @@ def detect_targets(model, frame, file_extension):
     cls, conf, box = yolov8_detection(model, frame)
     return cls, conf, box
 
-def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled=True, mouse_sensitivity=0.5):
+def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled=True, mouse_sensitivity=0.5, aimbot_active=True):
     """Draw model information including precision on the image"""
     if image is None:
         return image
@@ -218,13 +220,14 @@ def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled
     font = cv2.FONT_HERSHEY_SIMPLEX
     info_text = f"Model: {os.path.basename(model_path)} ({precision})"
     fps_text = f"FPS: {fps:.1f}"
-    controls_text = "Keys: Q-Quit, T-Toggle Pin, P-Prediction, I-PID"
+    controls_text = "Keys: Q-Quit, T-Toggle Pin, P-Prediction, I-PID, C-Toggle Aimbot"
     sens_text = f"Sensitivity: {mouse_sensitivity:.2f} (+/- to adjust)"
     
     # Mode indicators
     prediction_status = "ON" if prediction_enabled else "OFF"
     pid_status = "ON" if pid_enabled else "OFF"
-    mode_text = f"Prediction: {prediction_status}  |  PID: {pid_status}"
+    aimbot_status = "ON" if aimbot_active else "OFF"
+    mode_text = f"Prediction: {prediction_status}  |  PID: {pid_status}  |  Aimbot: {aimbot_status}"
     
     # Background for better readability
     cv2.rectangle(image, (10, 10), (400, 120), (0, 0, 0), -1)
@@ -255,6 +258,15 @@ def position_window(window_name, x, y, width, height):
     
     print(f"Window '{window_name}' positioned at ({x}, {y}) with size {width}x{height}")
     return True
+
+def mouse_move(dx, dy):
+    """Alternative mouse movement function using ctypes directly."""
+    # Constants from winuser.h
+    MOUSEEVENTF_MOVE = 0x0001
+    
+    # Use ctypes directly
+    ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, ctypes.c_long(dx), ctypes.c_long(dy), 0, 0)
+    print(f"Direct ctypes mouse move: ({dx}, {dy})")
 
 # -------------------------------
 # Main Execution
@@ -324,6 +336,7 @@ def main():
     # Mode flags
     prediction_enabled = True
     pid_enabled = True
+    aimbot_active = True     # Toggle with 'c' key
     visualization_enabled = True  # Toggle with 'v' key
     fps_display_enabled = True    # Toggle with 'f' key
     
@@ -464,14 +477,14 @@ def main():
                     control_output_x = dx * mouse_sensitivity
                     control_output_y = dy * mouse_sensitivity
                 
-                # Apply the mouse movement
-                win32api.mouse_event(
-                    win32con.MOUSEEVENTF_MOVE,
-                    int(control_output_x),
-                    int(control_output_y),
-                    0,
-                    0
-                )
+                # Apply the mouse movement only if aimbot is active
+                if aimbot_active:
+                    mouse_move(int(control_output_x), int(control_output_y))
+                
+                # Debug output to check if mouse movement values are reasonable
+                print(f"Moving mouse by: ({int(control_output_x)}, {int(control_output_y)}), Active: {aimbot_active}")
+                print(f"Raw target offset: ({dx}, {dy})")
+                print(f"PID: {pid_enabled}, Sensitivity: {mouse_sensitivity}")
             else:
                 # No target detected, reset the predictor
                 predictor.reset()
@@ -485,8 +498,10 @@ def main():
             # Smooth FPS display with moving average (70% previous, 30% current)
             display_fps = display_fps * 0.7 + current_fps * 0.3 if display_fps > 0 else current_fps
             
-            frame_count += 1
             total_fps += current_fps
+        
+        # Always increment frame count, regardless of processing
+        frame_count += 1
 
         # Visual display - only update visuals at the specified interval
         if visualization_enabled and last_image_output is not None:
@@ -499,7 +514,8 @@ def main():
                     display_fps, 
                     prediction_enabled, 
                     pid_enabled, 
-                    mouse_sensitivity
+                    mouse_sensitivity,
+                    aimbot_active
                 )
                 
                 # Add total runtime
@@ -572,6 +588,11 @@ def main():
         elif key == KEY_TOGGLE_FPS:
             fps_display_enabled = not fps_display_enabled
             print(f"FPS display {'enabled' if fps_display_enabled else 'disabled'}")
+        elif key == KEY_TOGGLE_ACTIVE:
+            # Toggle aimbot active state
+            aimbot_active = not aimbot_active
+            print(f"Aimbot {'enabled' if aimbot_active else 'disabled'}")
+            pid_enabled = aimbot_active
         # Number keys 1-9 control process_every_n_frames for performance tuning
         elif key >= ord('1') and key <= ord('9'):
             process_every_n_frames = key - ord('0')  # Convert ASCII to number
