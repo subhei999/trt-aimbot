@@ -89,4 +89,7 @@ coverage.xml
 *.pth
 *.bin
 *.npy
-*.npz 
+*.npz
+
+# Models directory
+models/ 
