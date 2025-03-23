@@ -61,7 +61,7 @@ def is_key_pressed(key_code):
 def wait_for_time(seconds):
     """
     Busy-wait for a specified amount of time in seconds.
-    Note: original code used ms, but it’s simpler to pass in seconds and convert if needed.
+    Note: original code used ms, but it's simpler to pass in seconds and convert if needed.
     """
     start_time = time.perf_counter()
     target_time = start_time + seconds
@@ -137,12 +137,12 @@ def main():
     os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
 
     # Model Selection & Loading
-    model_path = 'best.engine'  # Replace with your actual path
+    model_path = 'models/best.engine'  # Updated path to models directory
     file_extension = pathlib.Path(model_path).suffix
 
     if file_extension == ".engine":
         # Using YOLO for label map extraction and then loading the engine
-        tmp_model = YOLO('best.pt')
+        tmp_model = YOLO('models/best.pt')  # Updated path to models directory
         label_map = tmp_model.names
         model = YOLO(model_path)
         # If you need TensorRT warmup:
