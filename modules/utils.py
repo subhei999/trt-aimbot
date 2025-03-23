@@ -17,74 +17,73 @@ def get_text_color(box_color):
 
     return text_color
 
-def draw_box(img, detection_output, class_list, colors, center_x, center_y):
-    # Copy image, in case that we need the original image for something
-    out_image = img
+def draw_box(
+    image, 
+    detection_output, 
+    label_map, 
+    color_list, 
+    center_x=None, 
+    center_y=None, 
+    draw_boxes=True
+):
+    """
+    Draw the detected boxes, showing the nearest to crosshair.
+    If draw_boxes=False, only calculates the closest center without drawing anything.
+    """
+    # Create a copy of the image for drawing
+    if draw_boxes:
+        image_output = image.copy()
+    else:
+        image_output = image  # Just use the original reference, won't modify it
+        
+    # Whether to show center crosshair
+    show_center = (center_x is not None and center_y is not None)
 
+    # Calculate closest center to crosshair
+    closest_center = None
     closest_distance = float('inf')
-    closest_human_box = None
-    closest_human_center = None  # To store the center of the closest human
 
-    for run_output in detection_output:
-        # Unpack
-        label, con, box = run_output
+    # For each object detected
+    for idx, (cls, conf, box) in enumerate(detection_output):
+        cls_name = label_map[cls]
 
-        # Choose color
-        # Blue color in BGR
-        box_color = (255, 0, 0)
-        # box_color = colors[int(label.item())]
-        # text_color = (255,255,255)
-        text_color = get_text_color(box_color)
-        # Get Class Name
-        label = class_list[int(label.item())]
-        # Draw object box
-        first_half_box = (int(box[0].item()), int(box[1].item()))
-        second_half_box = (int(box[2].item()), int(box[3].item()))
-        cv2.rectangle(out_image, first_half_box, second_half_box, box_color, 2)
-        # Create text
-        text_print = '{label} {con:.2f}'.format(label=label, con=con.item())
-        # Locate text position
-        text_location = (int(box[0]), int(box[1] - 10))
-        # Get size and baseline
-        labelSize, baseLine = cv2.getTextSize(text_print, cv2.FONT_HERSHEY_SIMPLEX, 1, 1)
-
-        # Draw text's background
-        cv2.rectangle(out_image,
-                      (int(box[0]), int(box[1] - labelSize[1] - 10)),
-                      (int(box[0]) + labelSize[0], int(box[1] + baseLine - 10)),
-                      box_color, cv2.FILLED)
-        # Put text
-        cv2.putText(out_image, text_print, text_location,
-                    cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    text_color, 2, cv2.LINE_AA)
-
-        if label == 'head':  # Check if the label is 'person'
-            # Calculate the center of the bounding box
-            box_center_x = (box[0] + box[2]) / 2
-            box_center_y = (box[1] + box[3]) / 2
-
-            # Calculate the distance from the center of the frame
-            distance = ((box_center_x - center_x) ** 2 + (box_center_y - center_y) ** 2) ** 0.5
-
-            # Check if this is the closest human so far
-            if distance < closest_distance:
+        # Get box coordinates
+        xb1, yb1, xb2, yb2 = box.astype(int)
+        
+        # Calculate center of the box
+        center = (int((xb1 + xb2) / 2), int((yb1 + yb2) / 2))
+        
+        # If center is provided, calculate the distance to this box
+        if show_center:
+            distance = ((center[0] - center_x) ** 2 + (center[1] - center_y) ** 2) ** 0.5
+            
+            # Check if this is the closest human to center
+            if distance < closest_distance and cls_name.lower() == "person":
                 closest_distance = distance
-                closest_human_box = box
-                closest_human_center = (box_center_x, box_center_y)
+                closest_center = center
 
-    if closest_human_box is not None:
-        # Draw a small box at the center of the closest human bounding box
-        center_box_color = (0, 255, 0)  # Green
-        center_box_thickness = 2
-        center_x, center_y = closest_human_center  # Use the center of the closest human
-        cv2.rectangle(out_image,
-                      (int(center_x) - 5, int(center_y) - 5),  # Top-left corner of the small box
-                      (int(center_x) + 5, int(center_y) + 5),  # Bottom-right corner of the small box
-                      center_box_color, center_box_thickness)
+        # Draw boxes and labels only if requested (for performance)
+        if draw_boxes:
+            # Draw box
+            cv2.rectangle(image_output, (xb1, yb1), (xb2, yb2), (0, 255, 0), 2)
+            
+            # Draw center point
+            cv2.circle(image_output, center, 5, (0, 0, 255), -1)
+            
+            # Draw class name and confidence
+            text = f"{cls_name}: {conf:.2f}"
+            cv2.putText(image_output, text, (xb1, yb1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-    return out_image, closest_human_center
+    # Draw center crosshair if center is provided and drawing is enabled
+    if show_center and draw_boxes:
+        cv2.line(image_output, (center_x - 10, center_y), (center_x + 10, center_y), (0, 0, 255), 2)
+        cv2.line(image_output, (center_x, center_y - 10), (center_x, center_y + 10), (0, 0, 255), 2)
+        
+        # Draw line to closest human
+        if closest_center is not None:
+            cv2.line(image_output, (center_x, center_y), closest_center, (255, 0, 0), 2)
 
-
+    return image_output, closest_center
 
 def draw_fps(avg_fps, combined_img):        
     avg_fps_str = float("{:.2f}".format(avg_fps))
