@@ -96,3 +96,10 @@ models/
 
 # Training data directory
 training_data/
+
+# Runs directory
+runs/
+
+# Results directory
+results/
+
