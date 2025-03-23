@@ -588,7 +588,7 @@ def main():
         elif key == KEY_TOGGLE_FPS:
             fps_display_enabled = not fps_display_enabled
             print(f"FPS display {'enabled' if fps_display_enabled else 'disabled'}")
-        elif key == KEY_TOGGLE_ACTIVE:
+        elif key == KEY_TOGGLE_ACTIVE:wwwwwww
             # Toggle aimbot active state
             aimbot_active = not aimbot_active
             print(f"Aimbot {'enabled' if aimbot_active else 'disabled'}")

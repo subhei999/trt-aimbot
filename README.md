@@ -6,6 +6,10 @@ A high-performance, customizable aimbot system powered by YOLOv8 and TensorRT ac
 
 This project combines computer vision with real-time detection to create a flexible aimbot system that can be trained on custom datasets. The workflow includes data collection, annotation, dataset preparation, and model training - all streamlined through batch scripts.
 
+## Demo
+
+![TRT-Aimbot in action](assets/trt-aimbot-test-gif.gif)
+
 ## Features
 
 - **Complete training workflow** - Collect data, label images, prepare datasets, and train models
