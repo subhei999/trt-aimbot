@@ -1,0 +1,16 @@
+numpy>=1.23.0
+opencv-python>=4.7.0
+pillow>=9.4.0
+matplotlib>=3.7.0
+dxcam>=0.7.0
+onnx>=1.13.1
+onnx-simplifier>=0.4.10
+onnxruntime-gpu>=1.13.1
+ultralytics>=8.0.0
+tensorrt>=8.5.1
+pynput>=1.7.6
+win32api>=1.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+tqdm>=4.64.0
+pywin32>=306 

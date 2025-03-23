@@ -23,9 +23,13 @@ REM Run the dataset manager with capture flag
 python dataset_manager.py --capture --count %COUNT% --interval %INTERVAL% --fov %FOV% --classes %CLASSES%
 
 echo.
-echo Data collection complete!
+echo ===================================
+echo Data Collection Complete!
+echo ===================================
+echo.
 echo Next steps:
-echo 1. Annotate the images in the dataset/annotations folder
-echo 2. Run 2_prepare_dataset.bat to convert and split the data
+echo 1. Run 2_label_data.bat to label your images
+echo 2. Run 3_prepare_dataset.bat to convert and split the dataset 
+echo 3. Run 4_train_model.bat to train the model
 echo.
 pause 

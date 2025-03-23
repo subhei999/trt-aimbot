@@ -53,9 +53,11 @@ echo Generating YAML configuration...
 python dataset_manager.py --generate-yaml --classes %CLASSES%
 
 echo.
-echo Dataset preparation complete!
+echo ===================================
+echo Dataset Preparation Complete!
+echo ===================================
+echo.
 echo Next steps:
-echo 1. Review the dataset in the dataset/images and dataset/labels folders
-echo 2. Run 3_train_model.bat to start training
+echo 1. Run 4_train_model.bat to train the YOLOv8 model
 echo.
 pause 

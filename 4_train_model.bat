@@ -1,4 +1,5 @@
 @echo off
+title YOLO Model Training
 echo Starting model training workflow...
 echo.
 
@@ -37,10 +38,12 @@ echo Starting training...
 yolo detect train model=%MODEL% data=dataset\training_config.yaml epochs=%EPOCHS% batch=%BATCH% imgsz=%IMG_SIZE% device=%DEVICE%
 
 echo.
-echo Training complete!
-echo Next steps:
-echo 1. Check the results in runs/detect/train
-echo 2. Convert the best model to TensorRT using model_convert_fp16.py
-echo 3. Test the model using aimbot_core.py
+echo ===================================
+echo Training Complete!
+echo ===================================
 echo.
+echo Your trained model is ready to use!
+echo The model is saved in the "runs/detect/train" directory.
+echo.
+echo You can now test your model with the aimbot_core.py script.
 pause 
