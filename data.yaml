@@ -1,0 +1,6 @@
+train: C:/Users/subhe/Desktop/Scripts/datasets/dataset/images/train
+val: C:/Users/subhe/Desktop/Scripts/datasets/dataset/images/val
+test: C:/Users/subhe/Desktop/Scripts/datasets/dataset/images/test
+
+nc: 1
+names: ["head"]
