@@ -92,4 +92,7 @@ coverage.xml
 *.npz
 
 # Models directory
-models/ 
+models/
+
+# Training data directory
+training_data/
