@@ -8,7 +8,7 @@ This project combines computer vision with real-time detection to create a flexi
 
 ## Demo
 
-![TRT-Aimbot in action](assets/trt-aimbot-test-gif.gf)
+![TRT-Aimbot in action](assets/trt-aimbot-test-gif.gif)
 
 ## Features
 
