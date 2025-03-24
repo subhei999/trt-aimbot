@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 title Complete YOLOv8 Training Workflow
 color 0A
 
@@ -44,21 +45,32 @@ if errorlevel 1 (
     echo STEP 1: DATA COLLECTION
     echo --------------------------------------
     echo.
-    set /p COUNT="Number of images to collect [%COUNT%]: "
-    set /p INTERVAL="Capture interval in seconds [%INTERVAL%]: "
-    set /p FOV="FOV size [%FOV%]: "
-    set /p CLASSES="Class name [%CLASSES%]: "
+    set /p COUNT="Number of images to collect [!COUNT!]: "
+    set /p INTERVAL="Capture interval in seconds [!INTERVAL!]: "
+    set /p FOV="FOV size [!FOV!]: "
+    set /p CLASSES="Class name [!CLASSES!]: "
     
     echo.
+    echo DEBUG - Values after input:
+    echo COUNT: [!COUNT!]
+    echo INTERVAL: [!INTERVAL!]
+    echo FOV: [!FOV!]
+    echo CLASSES: [!CLASSES!]
+    echo.
+    
     echo Running data collection with parameters:
-    echo - Images: %COUNT%
-    echo - Interval: %INTERVAL%s
-    echo - FOV: %FOV%x%FOV%
-    echo - Class: %CLASSES%
+    echo - Images: !COUNT!
+    echo - Interval: !INTERVAL!s
+    echo - FOV: !FOV!x!FOV!
+    echo - Class: !CLASSES!
     echo.
     pause
     
-    call 1_collect_data.bat %COUNT% %INTERVAL% %FOV% %CLASSES%
+    echo DEBUG - About to call with:
+    echo call 1_collect_data.bat "!COUNT!" "!INTERVAL!" "!FOV!" "!CLASSES!"
+    echo.
+    
+    call 1_collect_data.bat "!COUNT!" "!INTERVAL!" "!FOV!" "!CLASSES!"
 )
 
 :STEP2
@@ -97,21 +109,21 @@ if errorlevel 1 (
     echo STEP 3: DATASET PREPARATION
     echo --------------------------------------
     echo.
-    set /p TRAIN_RATIO="Train ratio [%TRAIN_RATIO%]: "
-    set /p VAL_RATIO="Validation ratio [%VAL_RATIO%]: "
-    set /p TEST_RATIO="Test ratio [%TEST_RATIO%]: "
-    set /p CLASSES="Class name [%CLASSES%]: "
+    set /p TRAIN_RATIO="Train ratio [!TRAIN_RATIO!]: "
+    set /p VAL_RATIO="Validation ratio [!VAL_RATIO!]: "
+    set /p TEST_RATIO="Test ratio [!TEST_RATIO!]: "
+    set /p CLASSES="Class name [!CLASSES!]: "
     
     echo.
     echo Running dataset preparation with parameters:
-    echo - Train: %TRAIN_RATIO%
-    echo - Validation: %VAL_RATIO%
-    echo - Test: %TEST_RATIO%
-    echo - Class: %CLASSES%
+    echo - Train: !TRAIN_RATIO!
+    echo - Validation: !VAL_RATIO!
+    echo - Test: !TEST_RATIO!
+    echo - Class: !CLASSES!
     echo.
     pause
     
-    call 3_prepare_dataset.bat %TRAIN_RATIO% %VAL_RATIO% %TEST_RATIO% %CLASSES%
+    call 3_prepare_dataset.bat "!TRAIN_RATIO!" "!VAL_RATIO!" "!TEST_RATIO!" "!CLASSES!"
 )
 
 :STEP4
@@ -125,23 +137,23 @@ if errorlevel 1 (
     echo STEP 4: MODEL TRAINING
     echo --------------------------------------
     echo.
-    set /p MODEL="Base model [%MODEL%]: "
-    set /p EPOCHS="Number of epochs [%EPOCHS%]: "
-    set /p BATCH="Batch size [%BATCH%]: "
-    set /p IMG_SIZE="Image size [%IMG_SIZE%]: "
-    set /p DEVICE="Device (0=GPU, cpu=CPU) [%DEVICE%]: "
+    set /p MODEL="Base model [!MODEL!]: "
+    set /p EPOCHS="Number of epochs [!EPOCHS!]: "
+    set /p BATCH="Batch size [!BATCH!]: "
+    set /p IMG_SIZE="Image size [!IMG_SIZE!]: "
+    set /p DEVICE="Device (0=GPU, cpu=CPU) [!DEVICE!]: "
     
     echo.
     echo Running model training with parameters:
-    echo - Model: %MODEL%
-    echo - Epochs: %EPOCHS%
-    echo - Batch size: %BATCH%
-    echo - Image size: %IMG_SIZE%
-    echo - Device: %DEVICE%
+    echo - Model: !MODEL!
+    echo - Epochs: !EPOCHS!
+    echo - Batch size: !BATCH!
+    echo - Image size: !IMG_SIZE!
+    echo - Device: !DEVICE!
     echo.
     pause
     
-    call 4_train_model.bat %MODEL% %EPOCHS% %BATCH% %IMG_SIZE% %DEVICE%
+    call 4_train_model.bat "!MODEL!" "!EPOCHS!" "!BATCH!" "!IMG_SIZE!" "!DEVICE!"
 )
 
 :STEP5
@@ -165,15 +177,15 @@ if errorlevel 1 (
     echo.
     echo Running model conversion...
     
-    if not "%INPUT_MODEL%"=="" (
-        if not "%OUTPUT_MODEL%"=="" (
-            call 5_convert_model.bat --input_model "%INPUT_MODEL%" --output_model "%OUTPUT_MODEL%"
+    if not "!INPUT_MODEL!"=="" (
+        if not "!OUTPUT_MODEL!"=="" (
+            call 5_convert_model.bat --input_model "!INPUT_MODEL!" --output_model "!OUTPUT_MODEL!"
         ) else (
-            call 5_convert_model.bat --input_model "%INPUT_MODEL%"
+            call 5_convert_model.bat --input_model "!INPUT_MODEL!"
         )
     ) else (
-        if not "%OUTPUT_MODEL%"=="" (
-            call 5_convert_model.bat --output_model "%OUTPUT_MODEL%"
+        if not "!OUTPUT_MODEL!"=="" (
+            call 5_convert_model.bat --output_model "!OUTPUT_MODEL!"
         ) else (
             call 5_convert_model.bat
         )
@@ -196,4 +208,6 @@ echo.
 echo You can now use your model with aimbot_core.py
 echo (The aimbot will automatically use the latest engine)
 echo.
-pause 
+pause
+
+endlocal 

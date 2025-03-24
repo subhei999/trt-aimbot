@@ -313,7 +313,11 @@ def main():
     # Capture options
     parser.add_argument('--capture', action='store_true', help='Capture new images')
     parser.add_argument('--count', type=int, default=DEFAULT_CAPTURE_COUNT, help='Number of images to capture')
-    parser.add_argument('--interval', type=float, default=DEFAULT_CAPTURE_INTERVAL, help='Interval between captures in seconds')
+    
+    # Convert interval from string to float to handle Windows batch file parameter passing issues
+    parser.add_argument('--interval', type=str, default=str(DEFAULT_CAPTURE_INTERVAL), 
+                        help='Interval between captures in seconds')
+    
     parser.add_argument('--fov', type=int, default=DEFAULT_FOV_SIZE, help='Size of capture region (square)')
     
     # Dataset options
@@ -323,9 +327,11 @@ def main():
     # Processing options
     parser.add_argument('--convert-json', type=str, help='Convert JSON annotations to YOLO format')
     parser.add_argument('--split-data', action='store_true', help='Split dataset into train/val/test sets')
-    parser.add_argument('--train-ratio', type=float, default=DEFAULT_TRAIN_RATIO, help='Training set ratio')
-    parser.add_argument('--val-ratio', type=float, default=DEFAULT_VAL_RATIO, help='Validation set ratio')
-    parser.add_argument('--test-ratio', type=float, default=DEFAULT_TEST_RATIO, help='Test set ratio')
+    
+    # Convert ratios from string to float to handle Windows batch file parameter passing issues
+    parser.add_argument('--train-ratio', type=str, default=str(DEFAULT_TRAIN_RATIO), help='Training set ratio')
+    parser.add_argument('--val-ratio', type=str, default=str(DEFAULT_VAL_RATIO), help='Validation set ratio')
+    parser.add_argument('--test-ratio', type=str, default=str(DEFAULT_TEST_RATIO), help='Test set ratio')
     
     # YAML generation
     parser.add_argument('--classes', type=str, nargs='+', default=['person'], help='Class names for dataset')
@@ -333,11 +339,45 @@ def main():
     
     args = parser.parse_args()
     
+    # Convert interval from string to float
+    try:
+        interval = float(args.interval.replace(',', '.'))  # Handle both comma and period as decimal separator
+    except ValueError:
+        print(f"Warning: Could not convert interval '{args.interval}' to float, using default: {DEFAULT_CAPTURE_INTERVAL}")
+        interval = DEFAULT_CAPTURE_INTERVAL
+    
+    # Convert ratio parameters from string to float
+    try:
+        train_ratio = float(args.train_ratio.replace(',', '.'))
+    except ValueError:
+        print(f"Warning: Could not convert train ratio '{args.train_ratio}' to float, using default: {DEFAULT_TRAIN_RATIO}")
+        train_ratio = DEFAULT_TRAIN_RATIO
+    
+    try:
+        val_ratio = float(args.val_ratio.replace(',', '.'))
+    except ValueError:
+        print(f"Warning: Could not convert validation ratio '{args.val_ratio}' to float, using default: {DEFAULT_VAL_RATIO}")
+        val_ratio = DEFAULT_VAL_RATIO
+    
+    try:
+        test_ratio = float(args.test_ratio.replace(',', '.'))
+    except ValueError:
+        print(f"Warning: Could not convert test ratio '{args.test_ratio}' to float, using default: {DEFAULT_TEST_RATIO}")
+        test_ratio = DEFAULT_TEST_RATIO
+    
+    # Normalize ratios to sum to 1.0
+    total = train_ratio + val_ratio + test_ratio
+    if total != 1.0:
+        print(f"Warning: Ratios sum to {total}, normalizing to 1.0")
+        train_ratio /= total
+        val_ratio /= total
+        test_ratio /= total
+    
     # Only create a new session folder if we're capturing new data
     if args.capture:
         # When capturing, we always want a new session
         folders = setup_folders(args.root, args.session)
-        captured_files = capture_images(folders, args.count, args.interval, args.fov)
+        captured_files = capture_images(folders, args.count, interval, args.fov)
         # Create template annotation file
         create_empty_annotations(folders, captured_files)
     else:
@@ -378,7 +418,7 @@ def main():
         print(f"Converted annotations to YOLO format in {folders['labels']}")
     
     if args.split_data:
-        splits = split_dataset(folders, args.train_ratio, args.val_ratio, args.test_ratio, args.session)
+        splits = split_dataset(folders, train_ratio, val_ratio, test_ratio, args.session)
         print("Dataset split complete")
     
     if args.generate_yaml:

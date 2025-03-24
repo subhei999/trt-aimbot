@@ -10,12 +10,12 @@ set BATCH=16
 set IMG_SIZE=640
 set DEVICE=0
 
-REM Check if arguments are provided
-if not "%1"=="" set MODEL=%1
-if not "%2"=="" set EPOCHS=%2
-if not "%3"=="" set BATCH=%3
-if not "%4"=="" set IMG_SIZE=%4
-if not "%5"=="" set DEVICE=%5
+REM Check if arguments are provided, handling potential quotes
+if not "%~1"=="" set MODEL=%~1
+if not "%~2"=="" set EPOCHS=%~2
+if not "%~3"=="" set BATCH=%~3
+if not "%~4"=="" set IMG_SIZE=%~4
+if not "%~5"=="" set DEVICE=%~5
 
 echo Training configuration:
 echo Model: %MODEL%

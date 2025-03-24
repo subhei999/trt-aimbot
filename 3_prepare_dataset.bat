@@ -8,11 +8,11 @@ set VAL_RATIO=0.1
 set TEST_RATIO=0.1
 set CLASSES=head
 
-REM Check if arguments are provided
-if not "%1"=="" set TRAIN_RATIO=%1
-if not "%2"=="" set VAL_RATIO=%2
-if not "%3"=="" set TEST_RATIO=%3
-if not "%4"=="" set CLASSES=%4
+REM Check if arguments are provided, handling potential quotes
+if not "%~1"=="" set TRAIN_RATIO=%~1
+if not "%~2"=="" set VAL_RATIO=%~2
+if not "%~3"=="" set TEST_RATIO=%~3
+if not "%~4"=="" set CLASSES=%~4
 
 echo Preparing dataset with split ratios:
 echo Train: %TRAIN_RATIO%
