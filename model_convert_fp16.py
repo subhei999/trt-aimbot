@@ -1,4 +1,5 @@
 import os
+import argparse
 import logging
 import tensorrt as trt
 from ultralytics import YOLO
@@ -50,7 +51,15 @@ def convert_to_fp16(model_path='models/best.pt', output_path='models/best_fp16.e
         return False
 
 if __name__ == "__main__":
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Convert YOLOv8 model to TensorRT FP16')
+    parser.add_argument('--model_path', type=str, default='models/best.pt', 
+                        help='Path to the PyTorch model (.pt)')
+    parser.add_argument('--output_path', type=str, default='models/best_fp16.engine',
+                        help='Path where to save the TensorRT engine')
+    args = parser.parse_args()
+    
     # Convert to FP16
     logger.info("Note: While true FP8 precision requires quantization layers typically found in transformer models,")
     logger.info("we can still get improved performance using FP16 precision with TensorRT.")
-    convert_to_fp16() 
+    convert_to_fp16(args.model_path, args.output_path) 

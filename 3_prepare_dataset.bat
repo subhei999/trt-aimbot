@@ -21,31 +21,30 @@ echo Test: %TEST_RATIO%
 echo Classes: %CLASSES%
 echo.
 
-REM Find the most recent annotation file
-for /f "delims=" %%a in ('dir /b /o-d dataset\annotations\annotations_*.json') do (
-    set LATEST_JSON=%%a
-    goto :found
+REM Find the most recent session folder with images
+echo Looking for the most recent session folder with images...
+set SOURCE_FOLDER=
+for /f "delims=" %%a in ('dir /b /ad /o-d dataset\raw 2^>nul') do (
+    if exist "dataset\raw\%%a\*.jpg" (
+        set SOURCE_FOLDER=%%a
+        goto :found_folder
+    )
 )
-:found
+:found_folder
 
-if not defined LATEST_JSON (
-    echo Error: No annotation files found in dataset/annotations/
-    echo Please run 1_collect_data.bat first and annotate the images.
+if "%SOURCE_FOLDER%"=="" (
+    echo Error: No folders with images found in dataset\raw\
+    echo Please run 1_collect_data.bat and 2_label_data.bat first.
     pause
     exit /b 1
 )
 
-echo Using annotation file: %LATEST_JSON%
+echo Found session folder: %SOURCE_FOLDER%
 echo.
-
-REM Convert annotations to YOLO format
-echo Converting annotations to YOLO format...
-python dataset_manager.py --convert-json dataset\annotations\%LATEST_JSON% --classes %CLASSES%
 
 REM Split the dataset
-echo.
 echo Splitting dataset...
-python dataset_manager.py --split-data --train-ratio %TRAIN_RATIO% --val-ratio %VAL_RATIO% --test-ratio %TEST_RATIO%
+python dataset_manager.py --split-data --session %SOURCE_FOLDER% --train-ratio %TRAIN_RATIO% --val-ratio %VAL_RATIO% --test-ratio %TEST_RATIO%
 
 REM Generate YAML configuration
 echo.

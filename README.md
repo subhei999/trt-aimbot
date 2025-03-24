@@ -13,7 +13,7 @@ This project combines computer vision with real-time detection to create a flexi
 ## Features
 
 - **Complete training workflow** - Collect data, label images, prepare datasets, and train models
-- **Simple UI-based labeling tool** - Quick bounding box annotation tool for training data
+- **Simple UI-based labeling tool** - Quick bounding box annotation tool with direct YOLO format output
 - **TensorRT acceleration** - High-performance inference using TensorRT optimization
 - **Highly customizable** - Train on your own datasets and tweak performance parameters
 - **Real-time detection** - Fast frame capture and processing with dxcam
@@ -98,6 +98,7 @@ This interactive script guides you through all steps of the process:
 2. **Image Labeling** - Opens the simple labeler to annotate your images
 3. **Dataset Preparation** - Splits the dataset and creates YAML configuration
 4. **Model Training** - Trains the YOLOv8 model on your dataset
+5. **Model Conversion** - Converts the trained model to a TensorRT engine
 
 ### Individual Steps
 
@@ -131,6 +132,8 @@ Use the simple labeler to annotate your images:
 - `test_ratio`: Proportion for testing (default: 0.1)
 - `class`: Object class name (default: head)
 
+This script now works directly with the YOLO format files created by the simple labeler, splitting your dataset and generating the YAML configuration needed for training.
+
 #### 4. Model Training
 ```
 4_train_model.bat [model] [epochs] [batch] [img_size] [device]
@@ -140,6 +143,23 @@ Use the simple labeler to annotate your images:
 - `batch`: Batch size (default: 16)
 - `img_size`: Training image size (default: 640)
 - `device`: Training device (default: 0 for GPU)
+
+#### 5. Model Conversion (TensorRT)
+```
+5_convert_model.bat [--input_model INPUT_MODEL] [--output_model OUTPUT_MODEL]
+```
+- `--input_model`: Path to the PyTorch model (default: automatically finds latest train folder)
+- `--output_model`: Path for the output TensorRT engine (default: models/[timestamp]_fp16.engine)
+
+This final step automatically finds the latest training run (train, train2, train3, etc.) and converts the PyTorch model to a TensorRT engine with FP16 precision. The engine is named with a timestamp for easy tracking of different versions.
+
+## Complete Training Pipeline
+
+1. Collect data with `1_collect_data.bat`
+2. Label images with `simple_labeler.py` 
+3. Prepare dataset with `3_prepare_dataset.bat`
+4. Train model with `4_train_model.bat`
+5. Convert to TensorRT with `5_convert_model.bat`
 
 ### Using the Aimbot
 
@@ -155,6 +175,25 @@ Keyboard controls:
 - F: Toggle FPS display
 - +/-: Adjust mouse sensitivity
 - C: Toggle aimbot active/inactive
+- W: Window selection mode (choose which game window to track)
+
+### Window Capture Features
+
+The aimbot can now capture from any selected window:
+
+1. When started, select your game window from the list
+2. The aimbot will capture a 640x640 square from the center of the window
+3. If your window moves, the aimbot will track it automatically
+4. Press 'W' during operation to select a different window
+
+#### Troubleshooting Capture Issues
+
+If you experience freezing or static frames:
+
+- Press 'D' to open the debug view showing the actual capture region
+- Make sure the game is running in windowed mode, not fullscreen
+- Try running the aimbot with administrator privileges
+- Some games with anti-cheat may block screen capture tools
 
 ## Customization Options
 

@@ -26,8 +26,8 @@ echo Device: %DEVICE%
 echo.
 
 REM Check if YAML config exists
-if not exist dataset\training_config.yaml (
-    echo Error: training_config.yaml not found!
+if not exist dataset\dataset.yaml (
+    echo Error: dataset.yaml not found!
     echo Please run 2_prepare_dataset.bat first.
     pause
     exit /b 1
@@ -35,7 +35,7 @@ if not exist dataset\training_config.yaml (
 
 REM Run YOLOv8 training
 echo Starting training...
-yolo detect train model=%MODEL% data=dataset\training_config.yaml epochs=%EPOCHS% batch=%BATCH% imgsz=%IMG_SIZE% device=%DEVICE%
+yolo detect train model=%MODEL% data=dataset\dataset.yaml epochs=%EPOCHS% batch=%BATCH% imgsz=%IMG_SIZE% device=%DEVICE%
 
 echo.
 echo ===================================

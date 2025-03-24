@@ -11,6 +11,7 @@ echo  1. Collect training images
 echo  2. Label the collected images
 echo  3. Prepare and split the dataset
 echo  4. Train the YOLOv8 model
+echo  5. Convert model to TensorRT engine
 echo.
 echo You can choose to run all steps or skip any step.
 echo.
@@ -30,6 +31,8 @@ set EPOCHS=100
 set BATCH=16
 set IMG_SIZE=640
 set DEVICE=0
+set INPUT_MODEL=
+set OUTPUT_MODEL=
 
 :STEP1
 echo STEP 1: DATA COLLECTION
@@ -116,7 +119,7 @@ cls
 echo STEP 4: MODEL TRAINING
 echo --------------------------------------
 choice /C YN /M "Do you want to train the YOLOv8 model"
-if errorlevel 2 goto END
+if errorlevel 2 goto STEP5
 if errorlevel 1 (
     cls
     echo STEP 4: MODEL TRAINING
@@ -141,6 +144,42 @@ if errorlevel 1 (
     call 4_train_model.bat %MODEL% %EPOCHS% %BATCH% %IMG_SIZE% %DEVICE%
 )
 
+:STEP5
+cls
+echo STEP 5: MODEL CONVERSION (TensorRT)
+echo --------------------------------------
+choice /C YN /M "Do you want to convert the model to TensorRT engine"
+if errorlevel 2 goto END
+if errorlevel 1 (
+    cls
+    echo STEP 5: MODEL CONVERSION (TensorRT)
+    echo --------------------------------------
+    echo.
+    echo The script will automatically find the latest trained model.
+    echo You can optionally specify custom input and output paths.
+    echo Leave blank to use automatic detection and timestamp naming.
+    echo.
+    set /p INPUT_MODEL="Input model path (leave blank for auto-detect): "
+    set /p OUTPUT_MODEL="Output engine path (leave blank for auto naming): "
+    
+    echo.
+    echo Running model conversion...
+    
+    if not "%INPUT_MODEL%"=="" (
+        if not "%OUTPUT_MODEL%"=="" (
+            call 5_convert_model.bat --input_model "%INPUT_MODEL%" --output_model "%OUTPUT_MODEL%"
+        ) else (
+            call 5_convert_model.bat --input_model "%INPUT_MODEL%"
+        )
+    ) else (
+        if not "%OUTPUT_MODEL%"=="" (
+            call 5_convert_model.bat --output_model "%OUTPUT_MODEL%"
+        ) else (
+            call 5_convert_model.bat
+        )
+    )
+)
+
 :END
 cls
 echo ===============================================
@@ -148,9 +187,13 @@ echo      WORKFLOW COMPLETED SUCCESSFULLY!
 echo ===============================================
 echo.
 echo Thank you for using the YOLOv8 Training Workflow.
-echo Your trained model (if completed) is saved in:
-echo runs/detect/train/
+echo Your trained model is saved in:
+echo runs/detect/train/ (or trainX/ for multiple runs)
+echo.
+echo Your TensorRT engine (if converted) is saved in:
+echo the models/ directory with a timestamp filename
 echo.
 echo You can now use your model with aimbot_core.py
+echo (The aimbot will automatically use the latest engine)
 echo.
 pause 

@@ -158,15 +158,32 @@ def convert_json_to_yolo(json_file, class_map, output_folder):
     
     return converted_files
 
-def split_dataset(folders, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1):
+def split_dataset(folders, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, session=None):
     """Split dataset into train/val/test sets and organize files"""
-    # Get all image files from raw folder
-    raw_folder = folders['raw']
+    # If a specific session is provided, use that instead of the one in folders
+    if session:
+        # Correctly construct the raw folder path with raw/session
+        raw_folder = os.path.join(folders['root'], 'raw', session)
+        if not os.path.exists(raw_folder):
+            print(f"Error: Session folder {raw_folder} not found")
+            return
+    else:
+        raw_folder = folders['raw']
+    
+    print(f"Using source folder: {raw_folder}")
+    
+    # Get all image files from the source folder
     image_files = [f for f in os.listdir(raw_folder) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
     
     if not image_files:
-        print("No image files found in raw folder!")
+        print("No image files found in the source folder!")
         return
+    
+    # Check for labels folder within the session folder
+    labels_folder = os.path.join(raw_folder, 'labels')
+    if not os.path.exists(labels_folder):
+        print(f"Warning: No labels folder found at {labels_folder}")
+        print("Make sure you have labeled your images.")
     
     # Shuffle files for random split
     random.shuffle(image_files)
@@ -183,19 +200,52 @@ def split_dataset(folders, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1):
     
     print(f"Splitting dataset: {len(train_files)} train, {len(val_files)} val, {len(test_files)} test")
     
+    # Track copied files for verification
+    train_imgs_copied = 0
+    val_imgs_copied = 0
+    test_imgs_copied = 0
+    train_labels_copied = 0
+    val_labels_copied = 0
+    test_labels_copied = 0
+    
     # Copy files to their respective folders
     for split, files in [('train', train_files), ('val', val_files), ('test', test_files)]:
         for file in files:
+            # Copy image
             src_path = os.path.join(raw_folder, file)
             dst_path = os.path.join(folders['images'], split, file)
             shutil.copy2(src_path, dst_path)
             
-            # If there's a corresponding label file, copy it too
+            # Track copied images
+            if split == 'train':
+                train_imgs_copied += 1
+            elif split == 'val':
+                val_imgs_copied += 1
+            else:
+                test_imgs_copied += 1
+            
+            # If there's a corresponding label file in the session/labels folder, copy it
             base_name = os.path.splitext(file)[0]
-            label_src = os.path.join(folders['labels'], f"{base_name}.txt")
+            label_src = os.path.join(labels_folder, f"{base_name}.txt")
             if os.path.exists(label_src):
                 label_dst = os.path.join(folders['labels'], split, f"{base_name}.txt")
                 shutil.copy2(label_src, label_dst)
+                
+                # Track copied labels
+                if split == 'train':
+                    train_labels_copied += 1
+                elif split == 'val':
+                    val_labels_copied += 1
+                else:
+                    test_labels_copied += 1
+    
+    # Print summary of copied files
+    print(f"Train: {train_imgs_copied} images, {train_labels_copied} labels")
+    print(f"Val: {val_imgs_copied} images, {val_labels_copied} labels")
+    print(f"Test: {test_imgs_copied} images, {test_labels_copied} labels")
+    
+    if train_labels_copied == 0 and val_labels_copied == 0 and test_labels_copied == 0:
+        print("Warning: No label files were copied. Check that your labels are in the correct format and location.")
     
     # Return the split information
     return {
@@ -268,7 +318,7 @@ def main():
     
     # Dataset options
     parser.add_argument('--root', type=str, default=DEFAULT_ROOT_FOLDER, help='Root folder for dataset')
-    parser.add_argument('--session', type=str, default=None, help='Session identifier (default: timestamp)')
+    parser.add_argument('--session', type=str, default=None, help='Session identifier for a specific data collection session')
     
     # Processing options
     parser.add_argument('--convert-json', type=str, help='Convert JSON annotations to YOLO format')
@@ -283,14 +333,37 @@ def main():
     
     args = parser.parse_args()
     
-    # Setup dataset folders
-    folders = setup_folders(args.root, args.session)
-    
-    # Execute requested operations
+    # Only create a new session folder if we're capturing new data
     if args.capture:
+        # When capturing, we always want a new session
+        folders = setup_folders(args.root, args.session)
         captured_files = capture_images(folders, args.count, args.interval, args.fov)
         # Create template annotation file
         create_empty_annotations(folders, captured_files)
+    else:
+        # For other operations, just ensure the base directories exist
+        # without creating a new session folder
+        folders = {
+            'root': args.root,
+            'raw': os.path.join(args.root, 'raw'),
+            'images': os.path.join(args.root, DEFAULT_IMAGES_FOLDER),
+            'labels': os.path.join(args.root, DEFAULT_LABELS_FOLDER),
+            'annotations': os.path.join(args.root, 'annotations'),
+            'session_id': args.session or datetime.now().strftime("%Y%m%d_%H%M%S")
+        }
+        
+        # Ensure only the necessary base directories exist
+        os.makedirs(folders['root'], exist_ok=True)
+        os.makedirs(folders['raw'], exist_ok=True)
+        os.makedirs(folders['images'], exist_ok=True)
+        os.makedirs(folders['labels'], exist_ok=True)
+        os.makedirs(folders['annotations'], exist_ok=True)
+        
+        # Create split directories if needed for dataset splitting
+        if args.split_data:
+            for split in ['train', 'val', 'test']:
+                os.makedirs(os.path.join(folders['images'], split), exist_ok=True)
+                os.makedirs(os.path.join(folders['labels'], split), exist_ok=True)
     
     if args.convert_json:
         if not os.path.exists(args.convert_json):
@@ -305,7 +378,7 @@ def main():
         print(f"Converted annotations to YOLO format in {folders['labels']}")
     
     if args.split_data:
-        splits = split_dataset(folders, args.train_ratio, args.val_ratio, args.test_ratio)
+        splits = split_dataset(folders, args.train_ratio, args.val_ratio, args.test_ratio, args.session)
         print("Dataset split complete")
     
     if args.generate_yaml:

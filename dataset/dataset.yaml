@@ -1,0 +1,9 @@
+# YOLO dataset configuration
+path: C:\Users\subhe\Desktop\Scripts\trt-aimbot\trt-aimbot\dataset  # dataset root
+train: images\train  # train images
+val: images\val  # val images
+test: images\test  # test images (optional)
+
+# Classes
+names:
+  0: head
