@@ -20,7 +20,7 @@ from modules.window_utils import (get_visible_windows, select_window,
                                 position_window, capture_window_screenshot)
 from modules.controllers import PIDController, TargetPredictor
 from modules.detection import detect_targets
-from modules.visualization import draw_model_info
+from modules.visualization import draw_model_info, draw_circular_mask
 
 # -------------------------------
 # Main Execution
@@ -194,6 +194,8 @@ def main():
     fps_display_enabled = True    # Toggle with 'f' key
     window_selection_mode = False # Toggle with 'w' key
     debug_capture_region = False  # Toggle with 'd' key - shows the exact capture area
+    mask_enabled = DEFAULT_MASK_ENABLED  # Toggle with 'm' key
+    mask_radius = DEFAULT_MASK_RADIUS   # Adjust with '.' and ',' keys
     
     # Performance optimization options
     process_every_n_frames = 1    # Process every frame by default, increase to skip frames
@@ -336,8 +338,15 @@ def main():
                     label_map,
                     COLORS,
                     center_x,
-                    center_y
+                    center_y,
+                    mask_enabled=mask_enabled,
+                    mask_radius=mask_radius
                 )
+                
+                # Draw the circular mask if enabled
+                if mask_enabled:
+                    image_output = draw_circular_mask(image_output, center_x, center_y, mask_radius)
+                
                 last_image_output = image_output
             else:
                 # Still get the closest human center for aiming, but skip visualization
@@ -348,7 +357,9 @@ def main():
                     COLORS,
                     center_x,
                     center_y,
-                    draw_boxes=False  # Skip drawing for performance
+                    draw_boxes=False,  # Skip drawing for performance
+                    mask_enabled=mask_enabled,
+                    mask_radius=mask_radius
                 )
             
             last_closest_human_center = closest_human_center
@@ -458,7 +469,9 @@ def main():
                     prediction_enabled, 
                     pid_enabled, 
                     mouse_sensitivity,
-                    aimbot_active
+                    aimbot_active,
+                    mask_enabled,
+                    mask_radius
                 )
                 
                 # Add total runtime and window info
@@ -633,6 +646,15 @@ def main():
         elif key == KEY_DEBUG_REGION:
             debug_capture_region = not debug_capture_region
             print(f"Capture region debug {'enabled' if debug_capture_region else 'disabled'}")
+        elif key == KEY_TOGGLE_MASK:
+            mask_enabled = not mask_enabled
+            print(f"Target mask {'enabled' if mask_enabled else 'disabled'}")
+        elif key == KEY_INCREASE_MASK:
+            mask_radius = min(MAX_MASK_RADIUS, mask_radius + MASK_RADIUS_STEP)
+            print(f"Mask radius increased to {mask_radius}")
+        elif key == KEY_DECREASE_MASK:
+            mask_radius = max(MIN_MASK_RADIUS, mask_radius - MASK_RADIUS_STEP)
+            print(f"Mask radius decreased to {mask_radius}")
         # Number keys 1-9 control process_every_n_frames for performance tuning
         elif key >= ord('1') and key <= ord('9'):
             process_every_n_frames = key - ord('0')  # Convert ASCII to number

@@ -3,9 +3,34 @@ Visualization utilities for rendering detection results and interface elements.
 """
 import os
 import cv2
+import numpy as np
+
+def draw_circular_mask(image, center_x, center_y, radius):
+    """
+    Draw a circular mask on the image to visualize the target exclusion zone.
+    """
+    if image is None:
+        return image
+    
+    # Create a copy of the image to avoid modifying the original
+    output = image.copy()
+    
+    # Draw the circle with a semi-transparent overlay
+    overlay = output.copy()
+    cv2.circle(overlay, (center_x, center_y), radius, (0, 255, 255), 2)  # Yellow circle
+    
+    # Add some transparency
+    alpha = 0.7
+    cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
+    
+    # Add a label for the mask
+    cv2.putText(output, f"Mask: {radius}px", (center_x - 50, center_y + radius + 20), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+    
+    return output
 
 def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled=True, 
-                    mouse_sensitivity=0.5, aimbot_active=True):
+                    mouse_sensitivity=0.5, aimbot_active=True, mask_enabled=False, mask_radius=240):
     """Draw model information including precision on the image"""
     if image is None:
         return image
@@ -24,10 +49,13 @@ def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled
     prediction_status = "ON" if prediction_enabled else "OFF"
     pid_status = "ON" if pid_enabled else "OFF"
     aimbot_status = "ON" if aimbot_active else "OFF"
+    mask_status = f"Mask: {mask_radius}px" if mask_enabled else "Mask: OFF"
+    
     mode_text = f"Prediction: {prediction_status}  |  PID: {pid_status}  |  Aimbot: {aimbot_status}"
+    mask_text = f"{mask_status} (M to toggle, ./,  to adjust)"
     
     # Background for better readability
-    cv2.rectangle(image, (10, 10), (600, 120), (0, 0, 0), -1)
+    cv2.rectangle(image, (10, 10), (600, 140), (0, 0, 0), -1)
     
     # Add text
     cv2.putText(image, info_text, (20, 30), font, 0.6, (0, 255, 0), 2)
@@ -35,5 +63,6 @@ def draw_model_info(image, model_path, fps, prediction_enabled=True, pid_enabled
     cv2.putText(image, controls_text, (20, 70), font, 0.5, (0, 255, 255), 1)
     cv2.putText(image, mode_text, (20, 90), font, 0.5, (0, 255, 255), 1)
     cv2.putText(image, sens_text, (20, 110), font, 0.5, (0, 255, 255), 1)
+    cv2.putText(image, mask_text, (20, 130), font, 0.5, (0, 255, 255), 1)
     
     return image 

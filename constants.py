@@ -27,6 +27,16 @@ KEY_TOGGLE_FPS = ord('f')        # Press 'f' to toggle FPS display
 KEY_TOGGLE_ACTIVE = ord('c')     # Press 'c' to toggle aimbot active state
 KEY_WINDOW_SELECT = ord('w')     # Press 'w' to toggle window selection mode
 KEY_DEBUG_REGION = ord('d')      # Press 'd' to toggle capture region debug window
+KEY_TOGGLE_MASK = ord('m')       # Press 'm' to toggle target mask
+KEY_INCREASE_MASK = ord('.')     # Press '.' to increase mask radius
+KEY_DECREASE_MASK = ord(',')     # Press ',' to decrease mask radius
 
 # Window settings
 WINDOW_NAME = "Detection Output"  # OpenCV window name 
+
+# Mask settings
+DEFAULT_MASK_ENABLED = False     # Whether the mask is enabled by default
+DEFAULT_MASK_RADIUS = 240        # Default radius (in pixels) for the circular mask
+MIN_MASK_RADIUS = 100            # Minimum mask radius
+MAX_MASK_RADIUS = 320            # Maximum mask radius (half of 640x640)
+MASK_RADIUS_STEP = 20            # How much to increase/decrease radius per keypress 

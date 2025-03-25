@@ -24,11 +24,14 @@ def draw_box(
     color_list, 
     center_x=None, 
     center_y=None, 
-    draw_boxes=True
+    draw_boxes=True,
+    mask_enabled=False,
+    mask_radius=240
 ):
     """
     Draw the detected boxes, showing the nearest to crosshair.
     If draw_boxes=False, only calculates the closest center without drawing anything.
+    If mask_enabled=True, only considers targets within mask_radius from center.
     """
     # Create a copy of the image for drawing
     if draw_boxes:
@@ -57,6 +60,10 @@ def draw_box(
         if show_center:
             distance = ((center[0] - center_x) ** 2 + (center[1] - center_y) ** 2) ** 0.5
             
+            # Skip this target if it's outside our mask radius and mask is enabled
+            if mask_enabled and distance > mask_radius:
+                continue
+                
             # Check if this is the closest human to center
             if distance < closest_distance and cls_name.lower() == "head":
                 closest_distance = distance
