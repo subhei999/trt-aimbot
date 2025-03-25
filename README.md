@@ -1,6 +1,56 @@
 # TRT-Aimbot
 
-A high-performance, customizable aimbot system powered by YOLOv8 and TensorRT acceleration.
+A modular aimbot system using TensorRT for high-performance object detection.
+
+## Project Structure
+
+The codebase is now structured in a modular way for better collaboration and maintenance:
+
+```
+├── aimbot_core.py         # Main execution file
+├── constants.py           # Shared constants (key codes, etc.)
+├── modules/
+│   ├── controllers.py     # PID controller and target predictor
+│   ├── detection.py       # Object detection functions
+│   ├── input_utils.py     # Mouse and keyboard input utilities
+│   ├── utils.py           # General utility functions
+│   ├── visualization.py   # Visualization utilities
+│   └── window_utils.py    # Window selection and management
+└── models/                # Directory for model files
+```
+
+## Module Descriptions
+
+- **constants.py**: Contains all key codes, window names, and other constants used throughout the application.
+
+- **modules/controllers.py**: Contains the `PIDController` class for aim smoothing and the `TargetPredictor` class for target movement prediction.
+
+- **modules/detection.py**: Contains functions for object detection using YOLOv8 and TensorRT.
+
+- **modules/input_utils.py**: Utilities for handling mouse movement and keyboard input.
+
+- **modules/utils.py**: General utility functions for image processing, drawing bounding boxes, etc.
+
+- **modules/visualization.py**: Functions for drawing overlay information on the display.
+
+- **modules/window_utils.py**: Utilities for finding, selecting, and capturing game windows.
+
+## Getting Started
+
+1. Make sure you have a model in the `models/` directory (either .pt or .engine format)
+2. Run `aimbot_core.py` to start the aimbot
+3. Select the game window to capture from
+4. Use the keyboard shortcuts to control the aimbot:
+   - `Q`: Quit
+   - `P`: Toggle prediction
+   - `I`: Toggle PID controller
+   - `C`: Toggle aimbot active state
+   - `+/-`: Adjust sensitivity
+   - `V`: Toggle visualization
+   - `F`: Toggle FPS display
+   - `W`: Toggle window selection mode
+   - `D`: Toggle capture region debug
+   - `1-9`: Process every N frames (performance adjustment)
 
 ## Overview
 
