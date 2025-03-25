@@ -40,3 +40,15 @@ DEFAULT_MASK_RADIUS = 240        # Default radius (in pixels) for the circular m
 MIN_MASK_RADIUS = 100            # Minimum mask radius
 MAX_MASK_RADIUS = 320            # Maximum mask radius (half of 640x640)
 MASK_RADIUS_STEP = 20            # How much to increase/decrease radius per keypress 
+
+# Aim offset settings
+DEFAULT_VERTICAL_OFFSET = 0.0    # Default vertical offset (0.0 = center, positive = higher, negative = lower)
+DEFAULT_HORIZONTAL_OFFSET = 0.0  # Default horizontal offset (0.0 = center, positive = right, negative = left)
+OFFSET_STEP = 0.05               # How much to increase/decrease offset per keypress (5% of box height/width)
+MIN_OFFSET = -0.5                # Minimum offset (-50% from center, i.e., bottom or left edge)
+MAX_OFFSET = 0.5                 # Maximum offset (+50% from center, i.e., top or right edge)
+
+# Keys for adjusting aim offset
+KEY_TOGGLE_OFFSET = ord('o')     # Press 'o' to toggle between vertical and horizontal offset adjustment
+KEY_INCREASE_OFFSET = ord('=')   # Press '=' to increase current offset
+KEY_DECREASE_OFFSET = ord('-')   # Press '-' to decrease current offset

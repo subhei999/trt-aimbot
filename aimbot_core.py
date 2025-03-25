@@ -197,6 +197,11 @@ def main():
     mask_enabled = DEFAULT_MASK_ENABLED  # Toggle with 'm' key
     mask_radius = DEFAULT_MASK_RADIUS   # Adjust with '.' and ',' keys
     
+    # Aim offset settings
+    vertical_offset = DEFAULT_VERTICAL_OFFSET    # Percentage offset from center of bounding box
+    horizontal_offset = DEFAULT_HORIZONTAL_OFFSET
+    adjust_vertical = True  # Toggle between adjusting vertical or horizontal offset
+    
     # Performance optimization options
     process_every_n_frames = 1    # Process every frame by default, increase to skip frames
     visualization_interval = 1    # Update visualization every N frames
@@ -340,7 +345,9 @@ def main():
                     center_x,
                     center_y,
                     mask_enabled=mask_enabled,
-                    mask_radius=mask_radius
+                    mask_radius=mask_radius,
+                    vertical_offset=vertical_offset,
+                    horizontal_offset=horizontal_offset
                 )
                 
                 # Draw the circular mask if enabled
@@ -359,7 +366,9 @@ def main():
                     center_y,
                     draw_boxes=False,  # Skip drawing for performance
                     mask_enabled=mask_enabled,
-                    mask_radius=mask_radius
+                    mask_radius=mask_radius,
+                    vertical_offset=vertical_offset,
+                    horizontal_offset=horizontal_offset
                 )
             
             last_closest_human_center = closest_human_center
@@ -471,7 +480,10 @@ def main():
                     mouse_sensitivity,
                     aimbot_active,
                     mask_enabled,
-                    mask_radius
+                    mask_radius,
+                    vertical_offset,
+                    horizontal_offset,
+                    adjust_vertical
                 )
                 
                 # Add total runtime and window info
@@ -655,6 +667,26 @@ def main():
         elif key == KEY_DECREASE_MASK:
             mask_radius = max(MIN_MASK_RADIUS, mask_radius - MASK_RADIUS_STEP)
             print(f"Mask radius decreased to {mask_radius}")
+        elif key == KEY_TOGGLE_OFFSET:
+            # Toggle between adjusting vertical and horizontal offset
+            adjust_vertical = not adjust_vertical
+            print(f"Now adjusting {'vertical' if adjust_vertical else 'horizontal'} offset")
+        elif key == KEY_INCREASE_OFFSET:
+            # Increase the currently selected offset
+            if adjust_vertical:
+                vertical_offset = min(MAX_OFFSET, vertical_offset + OFFSET_STEP)
+                print(f"Vertical offset increased to {vertical_offset:.2f} ({vertical_offset*100:.1f}%)")
+            else:
+                horizontal_offset = min(MAX_OFFSET, horizontal_offset + OFFSET_STEP)
+                print(f"Horizontal offset increased to {horizontal_offset:.2f} ({horizontal_offset*100:.1f}%)")
+        elif key == KEY_DECREASE_OFFSET:
+            # Decrease the currently selected offset
+            if adjust_vertical:
+                vertical_offset = max(MIN_OFFSET, vertical_offset - OFFSET_STEP)
+                print(f"Vertical offset decreased to {vertical_offset:.2f} ({vertical_offset*100:.1f}%)")
+            else:
+                horizontal_offset = max(MIN_OFFSET, horizontal_offset - OFFSET_STEP)
+                print(f"Horizontal offset decreased to {horizontal_offset:.2f} ({horizontal_offset*100:.1f}%)")
         # Number keys 1-9 control process_every_n_frames for performance tuning
         elif key >= ord('1') and key <= ord('9'):
             process_every_n_frames = key - ord('0')  # Convert ASCII to number

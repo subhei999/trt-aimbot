@@ -26,12 +26,15 @@ def draw_box(
     center_y=None, 
     draw_boxes=True,
     mask_enabled=False,
-    mask_radius=240
+    mask_radius=240,
+    vertical_offset=0.0,
+    horizontal_offset=0.0
 ):
     """
     Draw the detected boxes, showing the nearest to crosshair.
     If draw_boxes=False, only calculates the closest center without drawing anything.
     If mask_enabled=True, only considers targets within mask_radius from center.
+    vertical_offset and horizontal_offset are percentages of the bounding box size (-0.5 to 0.5).
     """
     # Create a copy of the image for drawing
     if draw_boxes:
@@ -53,8 +56,22 @@ def draw_box(
         # Get box coordinates
         xb1, yb1, xb2, yb2 = box.astype(int)
         
+        # Calculate box width and height
+        box_width = xb2 - xb1
+        box_height = yb2 - yb1
+        
         # Calculate center of the box
-        center = (int((xb1 + xb2) / 2), int((yb1 + yb2) / 2))
+        center_box_x = int((xb1 + xb2) / 2)
+        center_box_y = int((yb1 + yb2) / 2)
+        
+        # Calculate the target position with offset
+        # Vertical offset: positive = higher (toward top of box), negative = lower (toward bottom)
+        # Horizontal offset: positive = right, negative = left
+        target_x = center_box_x + int(horizontal_offset * box_width)
+        target_y = center_box_y - int(vertical_offset * box_height)  # Subtract because y-axis is flipped in images
+        
+        # Create a point for the target position
+        center = (target_x, target_y)
         
         # If center is provided, calculate the distance to this box
         if show_center:
@@ -74,8 +91,11 @@ def draw_box(
             # Draw box
             cv2.rectangle(image_output, (xb1, yb1), (xb2, yb2), (0, 255, 0), 2)
             
-            # Draw center point
-            cv2.circle(image_output, center, 5, (0, 0, 255), -1)
+            # Draw box center point
+            cv2.circle(image_output, (center_box_x, center_box_y), 3, (0, 0, 255), -1)
+            
+            # Draw target aim point (with offset applied)
+            cv2.circle(image_output, center, 5, (255, 0, 255), -1)
             
             # Draw class name and confidence
             text = f"{cls_name}: {conf:.2f}"
