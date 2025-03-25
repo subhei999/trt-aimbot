@@ -177,7 +177,7 @@ def main():
     controller = PIDController(kp=0.3, ki=0.0, kd=0.1)
     
     # Add target predictor with reduced prediction time and scaling
-    predictor = TargetPredictor(history_size=5, prediction_time=0.05)
+    predictor = TargetPredictor(history_size=10, prediction_time=0.05, sample_interval=5)
     
     # Prediction scaling factor to reduce overshooting (0.0-1.0)
     prediction_scale = 0.3
@@ -422,6 +422,20 @@ def main():
                                             (255, 0, 0), -1)
                                 cv2.putText(image_output, strafe_info, (text_x, text_y), 
                                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            
+                            # Show velocity information
+                            velocity_info = predictor.get_velocity_info()
+                            if velocity_info:
+                                # Draw velocity indicator below the target with cyan background
+                                text_size = cv2.getTextSize(velocity_info, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
+                                text_x = int(closest_human_center[0] - text_size[0] // 2)
+                                text_y = int(closest_human_center[1] + 30)  # 30 pixels below target
+                                cv2.rectangle(image_output, 
+                                            (text_x - 5, text_y - 20), 
+                                            (text_x + text_size[0] + 5, text_y + 5), 
+                                            (255, 255, 0), -1)
+                                cv2.putText(image_output, velocity_info, (text_x, text_y), 
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
                     else:
                         # Fall back to current position if prediction isn't available
                         dx = closest_human_center[0] - center_x
