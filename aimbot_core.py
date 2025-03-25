@@ -200,7 +200,6 @@ def main():
     # Aim offset settings
     vertical_offset = DEFAULT_VERTICAL_OFFSET    # Percentage offset from center of bounding box
     horizontal_offset = DEFAULT_HORIZONTAL_OFFSET
-    adjust_vertical = True  # Toggle between adjusting vertical or horizontal offset
     
     # Performance optimization options
     process_every_n_frames = 1    # Process every frame by default, increase to skip frames
@@ -482,8 +481,7 @@ def main():
                     mask_enabled,
                     mask_radius,
                     vertical_offset,
-                    horizontal_offset,
-                    adjust_vertical
+                    horizontal_offset
                 )
                 
                 # Add total runtime and window info
@@ -548,12 +546,6 @@ def main():
             print(f"PID control {'enabled' if pid_enabled else 'disabled'}")
             # Reset controller when changing modes
             controller.reset()
-        elif key == KEY_INCREASE_SENS:
-            mouse_sensitivity += 0.05
-            print(f"Sensitivity increased to {mouse_sensitivity:.2f}")
-        elif key == KEY_DECREASE_SENS:
-            mouse_sensitivity = max(0.05, mouse_sensitivity - 0.05)  # Prevent going below 0.05
-            print(f"Sensitivity decreased to {mouse_sensitivity:.2f}")
         elif key == KEY_TOGGLE_VISUAL:
             visualization_enabled = not visualization_enabled
             print(f"Visualization {'enabled' if visualization_enabled else 'disabled'}")
@@ -667,26 +659,6 @@ def main():
         elif key == KEY_DECREASE_MASK:
             mask_radius = max(MIN_MASK_RADIUS, mask_radius - MASK_RADIUS_STEP)
             print(f"Mask radius decreased to {mask_radius}")
-        elif key == KEY_TOGGLE_OFFSET:
-            # Toggle between adjusting vertical and horizontal offset
-            adjust_vertical = not adjust_vertical
-            print(f"Now adjusting {'vertical' if adjust_vertical else 'horizontal'} offset")
-        elif key == KEY_INCREASE_OFFSET:
-            # Increase the currently selected offset
-            if adjust_vertical:
-                vertical_offset = min(MAX_OFFSET, vertical_offset + OFFSET_STEP)
-                print(f"Vertical offset increased to {vertical_offset:.2f} ({vertical_offset*100:.1f}%)")
-            else:
-                horizontal_offset = min(MAX_OFFSET, horizontal_offset + OFFSET_STEP)
-                print(f"Horizontal offset increased to {horizontal_offset:.2f} ({horizontal_offset*100:.1f}%)")
-        elif key == KEY_DECREASE_OFFSET:
-            # Decrease the currently selected offset
-            if adjust_vertical:
-                vertical_offset = max(MIN_OFFSET, vertical_offset - OFFSET_STEP)
-                print(f"Vertical offset decreased to {vertical_offset:.2f} ({vertical_offset*100:.1f}%)")
-            else:
-                horizontal_offset = max(MIN_OFFSET, horizontal_offset - OFFSET_STEP)
-                print(f"Horizontal offset decreased to {horizontal_offset:.2f} ({horizontal_offset*100:.1f}%)")
         # Number keys 1-9 control process_every_n_frames for performance tuning
         elif key >= ord('1') and key <= ord('9'):
             process_every_n_frames = key - ord('0')  # Convert ASCII to number
