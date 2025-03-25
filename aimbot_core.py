@@ -174,17 +174,17 @@ def main():
     preview_y = 40  # 40px padding from top
     
     # PID controller for aim adjustment - reduce kp value to decrease overshooting
-    controller = PIDController(kp=0.3, ki=0.0, kd=0.1)
+    controller = PIDController(kp=0.8, ki=0.0, kd=0.1)
     
     # Add target predictor with reduced prediction time and scaling
-    predictor = TargetPredictor(history_size=10, prediction_time=0.05, sample_interval=5)
+    predictor = TargetPredictor(history_size=10, prediction_time=0.1, sample_interval=5)
     
     # Prediction scaling factor to reduce overshooting (0.0-1.0)
-    prediction_scale = 0.3
+    prediction_scale = 1
     
     # Mouse sensitivity calibration (pixels to mouse movement ratio)
     # This is critical for preventing oscillations when PID is disabled
-    mouse_sensitivity = 0.45  # Starting value (can be adjusted with + and - keys)
+    mouse_sensitivity = 1  # Starting value (can be adjusted with + and - keys)
     
     # Mode flags
     prediction_enabled = False

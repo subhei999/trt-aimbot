@@ -42,7 +42,7 @@ MAX_MASK_RADIUS = 320            # Maximum mask radius (half of 640x640)
 MASK_RADIUS_STEP = 20            # How much to increase/decrease radius per keypress 
 
 # Aim offset settings
-DEFAULT_VERTICAL_OFFSET = 0.35    # Default vertical offset (0.0 = center, positive = higher, negative = lower)
+DEFAULT_VERTICAL_OFFSET = 0.45    # Default vertical offset (0.0 = center, positive = higher, negative = lower) OVERWATCH = 0.45
 DEFAULT_HORIZONTAL_OFFSET = 0.0  # Default horizontal offset (0.0 = center, positive = right, negative = left)
 MIN_OFFSET = -0.5                # Minimum offset (-50% from center, i.e., bottom or left edge)
 MAX_OFFSET = 0.5                 # Maximum offset (+50% from center, i.e., top or right edge)
