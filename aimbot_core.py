@@ -186,14 +186,6 @@ def main():
     # This is critical for preventing oscillations when PID is disabled
     mouse_sensitivity = 0.45  # Starting value (can be adjusted with + and - keys)
     
-    # Target persistence settings
-    persistent_target_enabled = True  # Toggle with 't' key
-    max_target_dropouts = 10         # Maximum consecutive frames to maintain target without detection
-    target_switch_threshold = 100    # Pixel distance threshold for considering a new target
-    current_target_id = None         # ID for the current target (None = no target)
-    target_dropout_counter = 0       # Count of consecutive frames with target lost
-    last_target_position = None      # Last known position of the target
-    
     # Mode flags
     prediction_enabled = False
     pid_enabled = False
@@ -334,176 +326,30 @@ def main():
             center_x = frame.shape[1] // 2
             center_y = frame.shape[0] // 2
 
-            # Handle target persistence
+            # Draw bounding boxes and get the center of the closest human
             closest_human_center = None
-            all_targets = []
             
-            # Process all detected targets
-            if detection_output:
-                # Extract all potential targets with their positions
-                for i, (cls_id, conf_val, bbox) in enumerate(detection_output):
-                    if cls_id == 0:  # Person class
-                        # Calculate center of the bounding box
-                        x1, y1, x2, y2 = bbox
-                        target_center_x = (x1 + x2) / 2
-                        target_center_y = (y1 + y2) / 2
-                        
-                        # Calculate distance from screen center
-                        dist_from_center = math.sqrt((target_center_x - center_x)**2 + (target_center_y - center_y)**2)
-                        
-                        # Add to targets list with unique ID
-                        all_targets.append({
-                            'id': i,
-                            'position': (target_center_x, target_center_y),
-                            'confidence': conf_val,
-                            'bbox': bbox,
-                            'distance': dist_from_center
-                        })
-            
-            # Apply target persistence logic
-            if persistent_target_enabled and all_targets:
-                if current_target_id is None:
-                    # No current target, select the closest one to center
-                    all_targets.sort(key=lambda x: x['distance'])
-                    closest_target = all_targets[0]
-                    closest_human_center = closest_target['position']
-                    current_target_id = closest_target['id']
-                    last_target_position = closest_human_center
-                    target_dropout_counter = 0
-                    
-                    # Debug output for target acquisition
-                    print(f"Acquired new target ID: {current_target_id} at position {closest_human_center}")
-                else:
-                    # We have a current target, try to find it or the closest match
-                    if last_target_position:
-                        # Find the closest target to our last known position
-                        min_dist = float('inf')
-                        best_match = None
-                        
-                        for target in all_targets:
-                            tx, ty = target['position']
-                            lx, ly = last_target_position
-                            
-                            # Calculate distance to last known position
-                            dist_to_last = math.sqrt((tx - lx)**2 + (ty - ly)**2)
-                            
-                            if dist_to_last < min_dist:
-                                min_dist = dist_to_last
-                                best_match = target
-                        
-                        # Check if the closest target is within our threshold
-                        if min_dist < target_switch_threshold:
-                            # Target found or close enough match
-                            closest_human_center = best_match['position']
-                            current_target_id = best_match['id']
-                            last_target_position = closest_human_center
-                            target_dropout_counter = 0
-                            
-                            # Debug output for target tracking
-                            print(f"Tracking target ID: {current_target_id}, distance from last: {min_dist:.2f}px")
-                        else:
-                            # No close match found, increment dropout counter
-                            target_dropout_counter += 1
-                            
-                            # Use the last known position for a few frames
-                            if target_dropout_counter <= max_target_dropouts:
-                                closest_human_center = last_target_position
-                                print(f"Target lost, using last position. Dropout counter: {target_dropout_counter}/{max_target_dropouts}")
-                            else:
-                                # We've exceeded our dropout threshold, acquire new target
-                                all_targets.sort(key=lambda x: x['distance'])
-                                closest_target = all_targets[0]
-                                closest_human_center = closest_target['position']
-                                current_target_id = closest_target['id']
-                                last_target_position = closest_human_center
-                                target_dropout_counter = 0
-                                
-                                print(f"Target dropout limit reached, switching to new target ID: {current_target_id}")
-            elif persistent_target_enabled and not all_targets:
-                # No targets detected at all
-                if current_target_id is not None:
-                    # We had a target but lost it, increment dropout counter
-                    target_dropout_counter += 1
-                    
-                    # Use the last known position for a few frames
-                    if target_dropout_counter <= max_target_dropouts and last_target_position:
-                        closest_human_center = last_target_position
-                        print(f"All targets lost, using last position. Dropout counter: {target_dropout_counter}/{max_target_dropouts}")
-                    else:
-                        # We've exceeded our dropout threshold, clear targeting
-                        current_target_id = None
-                        last_target_position = None
-                        print("Target dropout limit reached, clearing target")
-            else:
-                # Persistent targeting disabled, use standard closest target logic
-                # Draw bounding boxes and get the center of the closest human
-                if should_visualize:
-                    image_output, closest_human_center = utils.draw_box(
-                        frame,
-                        detection_output,
-                        label_map,
-                        COLORS,
-                        center_x,
-                        center_y
-                    )
-                    last_image_output = image_output
-                else:
-                    # Still get the closest human center for aiming, but skip visualization
-                    _, closest_human_center = utils.draw_box(
-                        frame,
-                        detection_output,
-                        label_map,
-                        COLORS,
-                        center_x,
-                        center_y,
-                        draw_boxes=False  # Skip drawing for performance
-                    )
-            
-            # Handle visualization with persistent targeting
-            if persistent_target_enabled and should_visualize:
-                # Create a copy of the frame for drawing
-                image_output = frame.copy()
-                
-                # Draw all detected boxes
-                for target in all_targets:
-                    x1, y1, x2, y2 = target['bbox']
-                    conf_val = target['confidence']
-                    
-                    # Get a class name (assuming 0 = person)
-                    class_name = label_map.get(0, "person")
-                    
-                    # Determine color based on whether this is our current target
-                    if target['id'] == current_target_id:
-                        # Current target - use red
-                        color = (0, 0, 255)
-                        thickness = 2
-                    else:
-                        # Other targets - use blue
-                        color = (255, 0, 0)
-                        thickness = 1
-                    
-                    # Draw the bounding box
-                    cv2.rectangle(image_output, (int(x1), int(y1)), (int(x2), int(y2)), color, thickness)
-                    
-                    # Draw the label
-                    label = f"{class_name} {conf_val:.2f}"
-                    text_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
-                    cv2.rectangle(image_output, (int(x1), int(y1) - 20), (int(x1) + text_size[0], int(y1)), color, -1)
-                    cv2.putText(image_output, label, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                
-                # Draw a special indicator for the current target
-                if closest_human_center:
-                    cv2.circle(image_output, (int(closest_human_center[0]), int(closest_human_center[1])), 5, (0, 255, 0), -1)
-                    
-                    # Draw target ID and dropout counter if using persistence
-                    status_text = f"Target ID: {current_target_id}, Dropouts: {target_dropout_counter}/{max_target_dropouts}"
-                    cv2.putText(image_output, status_text, (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-                
-                # Draw crosshair at center
-                cv2.line(image_output, (center_x - 10, center_y), (center_x + 10, center_y), (0, 255, 255), 1)
-                cv2.line(image_output, (center_x, center_y - 10), (center_x, center_y + 10), (0, 255, 255), 1)
-                
+            if should_visualize:
+                image_output, closest_human_center = utils.draw_box(
+                    frame,
+                    detection_output,
+                    label_map,
+                    COLORS,
+                    center_x,
+                    center_y
+                )
                 last_image_output = image_output
+            else:
+                # Still get the closest human center for aiming, but skip visualization
+                _, closest_human_center = utils.draw_box(
+                    frame,
+                    detection_output,
+                    label_map,
+                    COLORS,
+                    center_x,
+                    center_y,
+                    draw_boxes=False  # Skip drawing for performance
+                )
             
             last_closest_human_center = closest_human_center
 
@@ -585,9 +431,6 @@ def main():
                 print(f"Moving mouse by: ({int(control_output_x)}, {int(control_output_y)}), Active: {aimbot_active}")
                 print(f"Raw target offset: ({dx}, {dy})")
                 print(f"PID: {pid_enabled}, Sensitivity: {mouse_sensitivity}")
-            else:
-                # No target detected, reset the predictor
-                predictor.reset()
         
         # Calculate FPS only if processing was done
         if should_process:
@@ -615,8 +458,7 @@ def main():
                     prediction_enabled, 
                     pid_enabled, 
                     mouse_sensitivity,
-                    aimbot_active,
-                    persistent_target_enabled
+                    aimbot_active
                 )
                 
                 # Add total runtime and window info
@@ -698,13 +540,6 @@ def main():
             aimbot_active = not aimbot_active
             print(f"Aimbot {'enabled' if aimbot_active else 'disabled'}")
             pid_enabled = aimbot_active
-        elif key == ord('t'):  # Add toggle for target persistence
-            persistent_target_enabled = not persistent_target_enabled
-            # Reset targeting data when toggling
-            current_target_id = None
-            last_target_position = None
-            target_dropout_counter = 0
-            print(f"Target persistence {'enabled' if persistent_target_enabled else 'disabled'}")
         elif key == KEY_WINDOW_SELECT:
             # Toggle window selection mode
             print("Entering window selection mode...")
