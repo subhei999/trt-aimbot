@@ -1,5 +1,5 @@
 # TRT-Aimbot
-![logo](assets/IMG_5686.png)
+![logo](assets/IMG_3686.png)
 
 A high-performance, customizable aimbot system powered by YOLOv8 and TensorRT acceleration.
 
