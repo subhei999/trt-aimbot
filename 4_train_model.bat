@@ -5,8 +5,8 @@ echo.
 
 REM Set default values
 set MODEL=yolov8n.pt
-set EPOCHS=100
-set BATCH=16
+set EPOCHS=300
+set BATCH=64
 set IMG_SIZE=640
 set DEVICE=0
 
