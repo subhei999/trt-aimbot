@@ -90,7 +90,7 @@ coverage.xml
 *.bin
 *.npy
 *.npz
-
+*.jpg
 # Models directory
 models/
 
